@@ -22,21 +22,73 @@
 #include <map>
 
 #include <iostream>
-#include <fstream>
+
+#include <atomic>
+#include <iostream>
+#include <cstdlib>
 
 
-// Global flag to track if the recording should stop
-bool stopRecording_2 = false;
 
-// Signal handler for SIGINT (Ctrl + C)
-void signalHandler(int signum) {
-    std::cout << "Keyboard interrupt received. Stopping the program..." << std::endl;
-    
-    // Set the stop flag to stop recording
-    stopRecording_2 = true;
+// Global flag variables
+std::atomic<bool> startFlag(false);
+std::atomic<bool> stopFlag(false);
+
+bool readFlag(const std::string& filename) {
+    std::ifstream flagFile(filename);
+    if (flagFile.is_open()) {
+        std::string line;
+        if (std::getline(flagFile, line)) {
+            return (line == "1");
+        }
+        flagFile.close();
+    }
+    return false;
+}
+
+// Function to set the flag value in a file
+void setFlag(const std::string& filename, const std::string& value) {
+    std::ofstream flagFile(filename);
+    if (flagFile.is_open()) {
+        flagFile << value;
+        flagFile.close();
+    } else {
+        std::cout << "Failed to set flag value in file: " << filename << std::endl;
+    }
+}
+
+void startRecording() {
+    startFlag = true; 
+    setFlag("recording_flag.txt", "1");
+}
+
+void stopRecording() {
+    stopFlag = false; 
+    setFlag("recording_flag.txt", "0");
 }
 
 
+// Function to record audio using a Python module
+void recordAudio() {
+    while (!stopFlag) {
+        if (startFlag) {
+            std::cout << "Recording audio..." << std::endl;
+
+            // Call the Python script for audio recording
+            system("python record_audio_3.py");
+
+            startFlag = false; // Reset the start flag
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+}
+
+
+// Signal handler for SIGINT (Ctrl + C)
+void signalHandler(int signal) {
+    if (signal == SIGINT) {
+        stopRecording();
+    }
+}
 
 
 // command-line parameters
@@ -506,52 +558,6 @@ int always_prompt_transcription(struct whisper_context * ctx, audio_async & audi
 }
 
 
-void setFlag(const std::string& flagFile, const std::string& flagValue) {
-    std::ofstream file(flagFile);
-    if (file.is_open()) {
-        file << flagValue;
-        file.close();
-    } else {
-        std::cerr << "Failed to open " << flagFile << std::endl;
-    }
-}
-
-void startRecording() {
-    setFlag("start_flag.txt", "1");
-}
-
-void stopRecording() {
-    setFlag("stop_flag.txt", "1");
-}
-
-
-// Function to record audio using a Python module
-void recordAudio() {
-    std::string command = "/opt/miniconda3/envs/arduino_v2/bin/python3 record_audio_3.py";
-
-    // Create a subprocess to execute the Python script
-    FILE* pipe = popen(command.c_str(), "r");
-    if (!pipe) {
-        std::cout << "Failed to execute Python script!" << std::endl;
-        return;
-    }
-
-    while (!stopFlag) {
-        if (startFlag) {
-            // Start recording audio
-            std::cout << "Recording audio..." << std::endl;
-            // Add your code to start recording using the Python module
-
-            // Reset the start flag
-            startFlag = false;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-
-    // Close the subprocess
-    pclose(pipe);
-}
-
 // general-purpose mode
 // freely transcribe the voice into text
 int process_general_transcription(struct whisper_context * ctx, audio_async &audio, const whisper_params &params) {
@@ -745,10 +751,6 @@ int main(int argc, char ** argv) {
     }
 
     audio.pause();
-
-    // // Set the stop flag to stop recording
-    // stopRecording();
-
 
 
     // Wait for the audio thread to finish
