@@ -3,9 +3,18 @@ import soundfile as sf
 import numpy as np
 import time
 
+from datetime import datetime
+
+# datetime object containing current date and time
+now = datetime.now()
+dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+
+
 # Set the audio settings
-SAMPLE_RATE = 44100
+SAMPLE_RATE = 16000
 OUTPUT_FILE = "recorded_audio.wav"
+
+
 
 # Initialize an empty list to store the recorded audio frames
 audio_frames = []
@@ -45,7 +54,7 @@ if len(audio_frames) > 0:
     audio_data = np.vstack(audio_frames)
 
     # Save the recorded audio to a WAV file
-    sf.write(OUTPUT_FILE, audio_data, SAMPLE_RATE)
+    sf.write(f'{now.strftime("%d_%m_%Y_%H_%M_%S")}_recorded_audio.wav', audio_data, SAMPLE_RATE)
     print("Audio saved to:", OUTPUT_FILE)
 else:
     print("No audio recorded.")

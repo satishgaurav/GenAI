@@ -67,6 +67,15 @@ void stopRecording() {
 }
 
 
+std::string toLowercase(const std::string& str) {
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+    return result;
+}
+
+
 // Function to record audio using a Python module
 void recordAudio() {
     while (!stopFlag) {
@@ -572,7 +581,7 @@ int process_general_transcription(struct whisper_context * ctx, audio_async &aud
     std::vector<float> pcmf32_prompt;
 
     // const std::string k_prompt = "Ok Whisper, start listening for commands.";
-    const std::string k_prompt = "Hello, Jarvis";
+    const std::string k_prompt = "Hello, June";
 
     fprintf(stderr, "\n");
     fprintf(stderr, "%s: general-purpose mode\n", __func__);
@@ -656,14 +665,19 @@ int process_general_transcription(struct whisper_context * ctx, audio_async &aud
                     const std::string command = ::trim(txt.substr(best_len));
 
 
-                    if (command.compare(", start recording.") == 0) {
+                    if (toLowercase(command).compare(", start recording.") == 0) {
                         fprintf(stdout, "recording started. \n");
                         startRecording(); 
                     }
 
-                    if (command.compare(", stop recording.") == 0) {
+                    if (toLowercase(command).compare(", stop recording.") == 0) {
                         fprintf(stdout, "recording stopped. \n");
                         stopRecording(); 
+                    }
+
+                    if (toLowercase(command).find("send me") != std::string::npos) {
+                        fprintf(stdout, "ok sending you summary. \n");
+ 
                     }
 
                     fprintf(stdout, "%s: Command '%s%s%s', (t = %d ms)\n", __func__, "\033[1m", command.c_str(), "\033[0m", (int) t_ms);
