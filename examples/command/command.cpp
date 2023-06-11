@@ -83,7 +83,7 @@ void recordAudio() {
             std::cout << "Recording audio..." << std::endl;
 
             // Call the Python script for audio recording
-            system("python record_audio_3.py");
+            system("/opt/miniconda3/envs/arduino_v2/bin/python3 record_audio_3.py");
 
             startFlag = false; // Reset the start flag
         }
@@ -669,12 +669,12 @@ int process_general_transcription(struct whisper_context * ctx, audio_async &aud
                     // toLowercase(command).find("send me") != std::string::npos
 
 
-                    if (toLowercase(command).compare(", start recording.") == 0) {
+                    if (toLowercase(command).compare(", start recording.") == 0 || toLowercase(command).compare(". Start recording.") == 0) {
                         fprintf(stdout, "recording started. \n");
                         startRecording(); 
                     }
 
-                    if (toLowercase(command).compare(", stop recording.") == 0) {
+                    if (toLowercase(command).compare(", stop recording.") == 0  || toLowercase(command).compare(", Stop recording.") == 0) {
                         fprintf(stdout, "recording stopped. \n");
                         stopRecording(); 
                     }
@@ -682,7 +682,7 @@ int process_general_transcription(struct whisper_context * ctx, audio_async &aud
                     if (toLowercase(command).find("send me") != std::string::npos) {
 
                         // Command to execute the compiled binary with arguments
-                        std::string command = "./main -m models/ggml-base.bin -l hi -f recorded_audio.wav -otxt";
+                        std::string command = "./main -m models/ggml-base.bin -l hi -tr -f recorded_audio.wav -otxt";
 
                         // Run the compiled C++ binary with arguments
                         int result = std::system(command.c_str());
@@ -694,7 +694,7 @@ int process_general_transcription(struct whisper_context * ctx, audio_async &aud
                              // Wait for the first system command to finish
                             wait(nullptr);
 
-                            system("python record_clean_txt_file.py");
+                            system("/opt/miniconda3/envs/arduino_v2/bin/python3 record_clean_txt_file.py");
                         }
 
                         fprintf(stdout, "ok sending you summary. \n");

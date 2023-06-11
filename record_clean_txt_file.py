@@ -50,6 +50,8 @@ def clean_text_file(input_file, output_file, gpt_file):
     # Remove the patterns using regular expressions
     cleaned_text = re.sub(pattern, '', text)
 
+    print(cleaned_text)
+
     full_response = generate_response_from_transcript(cleaned_text) 
     print(full_response)
 
