@@ -664,6 +664,10 @@ int process_general_transcription(struct whisper_context * ctx, audio_async &aud
 
                     const std::string command = ::trim(txt.substr(best_len));
 
+                    
+
+                    // toLowercase(command).find("send me") != std::string::npos
+
 
                     if (toLowercase(command).compare(", start recording.") == 0) {
                         fprintf(stdout, "recording started. \n");
@@ -676,6 +680,23 @@ int process_general_transcription(struct whisper_context * ctx, audio_async &aud
                     }
 
                     if (toLowercase(command).find("send me") != std::string::npos) {
+
+                        // Command to execute the compiled binary with arguments
+                        std::string command = "./main -m models/ggml-base.bin -l hi -f recorded_audio.wav -otxt";
+
+                        // Run the compiled C++ binary with arguments
+                        int result = std::system(command.c_str());
+
+                    
+
+                        if (result == 0) {
+
+                             // Wait for the first system command to finish
+                            wait(nullptr);
+
+                            system("python record_clean_txt_file.py");
+                        }
+
                         fprintf(stdout, "ok sending you summary. \n");
  
                     }
